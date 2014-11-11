@@ -1,0 +1,26 @@
+---
+
+zabbix_web_user: www-data
+zabbix_web_group: www-data
+
+zabbix_web_package: zabbix-frontend-php
+
+zabbix_web_conf_dir:   /etc/zabbix
+zabbix_web_log_dir:    /var/log/zabbix-web
+zabbix_web_home_dir:   /var/run/zabbix-web
+zabbix_web_public_dir: /usr/share/zabbix
+
+zabbix_database_host:     localhost
+zabbix_database_port:     3306
+zabbix_database_username: zabbix
+zabbix_database_password: SET_ME_PLEASE
+zabbix_database_name:     zabbix
+
+zabbix_server_host: localhost
+zabbix_server_port: 10051
+logstash_conf_dir: /etc/logstash/conf.d
+
+php_fpm_conf_dir: /etc/php5/fpm
+
+zabbix_web_fqdn: zabbix.example.com
+zabbix_web_fastcgi_params: fastcgi_params

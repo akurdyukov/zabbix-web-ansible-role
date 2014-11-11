@@ -1,0 +1,23 @@
+server {
+    listen      443 ssl;
+    server_name {{ zabbix_web_fqdn }};
+    root        {{ zabbix_web_public_dir }};
+    index       index.php index.html index.htm;
+
+    access_log  {{ zabbix_web_log_dir }}/nginx.access.log;
+    error_log   {{ zabbix_web_log_dir }}/nginx.error.log;
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+        if (!-f $document_root$fastcgi_script_name) {
+            return 404;
+        }
+        fastcgi_pass unix:/{{ zabbix_web_home_dir }}/php5-fpm.sock;
+        fastcgi_index index.php;
+        include {{ zabbix_web_fastcgi_params }};
+    }
+    
+    location / {
+        try_files  $uri $uri/ =404;
+    }
+}

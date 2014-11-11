@@ -1,0 +1,71 @@
+---
+
+- name: Install package
+  apt: name={{ zabbix_web_package }} state=present
+  tags:
+    - zabbix-web
+
+- name: Install PHP MySQL client library
+  apt: name=php5-mysql state=present
+  tags:
+    - zabbix-web
+    - mysql
+    - php
+    - php-fpm
+
+- name: Turn off Apache
+  service: name=apache2 state=stopped
+  tags:
+    - zabbix-web
+    - apache
+
+- name: Create home directory
+  file: state=directory path={{ zabbix_web_home_dir }} owner={{ zabbix_web_user }} group={{ zabbix_web_group }} mode=0755
+  tags:
+    - zabbix-web
+    
+- name: Create log directory
+  file: state=directory path={{ zabbix_web_log_dir }} owner={{ zabbix_web_user }} group={{ zabbix_web_group }} mode=0755
+  tags:
+    - zabbix-web
+
+- name: Create PHP-FPM pool
+  template: src=../../php-fpm/templates/pool.conf.j2 dest={{ php_fpm_conf_dir }}/pool.d/zabbix-web.conf owner=root group=root mode=0644
+  notify:
+    - restart php-fpm
+  tags:
+    - zabbix-web
+    - php
+  with_items:
+    - name:        zabbix-web
+      root:        "{{ zabbix_web_public_dir }}"
+      user:        "{{ zabbix_web_user }}"
+      group:       "{{ zabbix_web_group }}"
+      listen:      "{{ zabbix_web_home_dir }}/php5-fpm.sock"
+      status_path: /_fpm_status
+      log_dir:     "{{ zabbix_web_log_dir }}"
+
+- name: Create configuration file
+  template: src=zabbix.conf.php.j2 dest={{ zabbix_web_conf_dir }}/zabbix.conf.php owner=root group=root mode=0644
+  notify:
+    - restart php-fpm
+  tags:
+    - zabbix-web
+
+- name: Create nginx configuration file
+  template: src=zabbix-web.conf.j2 dest=/etc/nginx/sites-available/zabbix-web.conf owner=root group=root mode=0644
+  notify:
+    - restart nginx
+  tags:
+    - zabbix-web
+    - nginx
+    
+- name: Enable nginx configuration file
+  file: state=link src=/etc/nginx/sites-available/zabbix-web.conf dest=/etc/nginx/sites-enabled/zabbix-web.conf owner=root group=root mode=0644
+  notify:
+    - restart nginx
+  tags:
+    - zabbix-web
+    - nginx
+
+- include: logstash.yml

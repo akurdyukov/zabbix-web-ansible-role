@@ -1,0 +1,6 @@
+input {
+  file {
+    path => "{{ zabbix_web_log_dir }}/*.log"
+    type => "zabbix"
+  }
+}
