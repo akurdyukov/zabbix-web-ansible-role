@@ -1,0 +1,8 @@
+---
+- name: Install package
+  yum: name=zabbix-web-{{ zabbix_database }} state=present
+  tags:
+    - zabbix-web
+
+- name: Set service name
+  set_fact: service_name="php-fpm"

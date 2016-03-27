@@ -1,23 +1,12 @@
 ---
 
-- name: Install package
-  apt: name={{ zabbix_web_package }} state=present
-  tags:
-    - zabbix-web
+- name: Install packages for Debian
+  include: install-debian.yml
+  when: ansible_os_family  == "Debian"
 
-- name: Install PHP MySQL client library
-  apt: name=php5-mysql state=present
-  tags:
-    - zabbix-web
-    - mysql
-    - php
-    - php-fpm
-
-- name: Turn off Apache
-  service: name=apache2 state=stopped
-  tags:
-    - zabbix-web
-    - apache
+- name: Install packages for RedHat
+  include: install-redhat.yml
+  when: ansible_os_family  == "RedHat"
 
 - name: Create home directory
   file: state=directory path={{ zabbix_web_home_dir }} owner={{ zabbix_web_user }} group={{ zabbix_web_group }} mode=0755
@@ -29,8 +18,16 @@
   tags:
     - zabbix-web
 
+- name: set app dir for Debian
+  set_fact: app_fpm_conf_dir="{{ php_fpm_conf_dir }}/pool.d"
+  when: ansible_os_family  == "Debian"
+
+- name: set app dir for RedHat
+  set_fact: app_fpm_conf_dir="/etc/php-fpm.d"
+  when: ansible_os_family  == "RedHat"
+
 - name: Create PHP-FPM pool
-  template: src=../../php-fpm/templates/pool.conf.j2 dest={{ php_fpm_conf_dir }}/pool.d/zabbix-web.conf owner=root group=root mode=0644
+  template: src=pool.conf.j2 dest={{ app_fpm_conf_dir }}/zabbix-web.conf owner=root group=root mode=0644
   notify:
     - restart php-fpm
   tags:
@@ -45,6 +42,14 @@
       status_path: /_fpm_status
       log_dir:     "{{ zabbix_web_log_dir }}"
 
+- name: set php database type for PostgreSQL
+  set_fact: php_database_name="POSTGRESQL"
+  when: zabbix_database == "pgsql"
+
+- name: set php database type for MySQL
+  set_fact: php_database_name="MYSQL"
+  when: zabbix_database == "mysql"
+
 - name: Create configuration file
   template: src=zabbix.conf.php.j2 dest={{ zabbix_web_conf_dir }}/zabbix.conf.php owner=root group=root mode=0644
   notify:
@@ -53,7 +58,18 @@
     - zabbix-web
 
 - name: Create nginx configuration file
+  template: src=zabbix-web.conf.j2 dest=/etc/nginx/conf.d/zabbix-web.conf owner=root group=root mode=0644
+  when: ansible_os_family  == "RedHat"
+  notify:
+    - restart nginx
+  tags:
+    - zabbix-web
+    - nginx
+
+
+- name: Create nginx configuration file
   template: src=zabbix-web.conf.j2 dest=/etc/nginx/sites-available/zabbix-web.conf owner=root group=root mode=0644
+  when: ansible_os_family  == "Debian"
   notify:
     - restart nginx
   tags:
@@ -62,6 +78,7 @@
     
 - name: Enable nginx configuration file
   file: state=link src=/etc/nginx/sites-available/zabbix-web.conf dest=/etc/nginx/sites-enabled/zabbix-web.conf owner=root group=root mode=0644
+  when: ansible_os_family  == "Debian"
   notify:
     - restart nginx
   tags:
@@ -69,3 +86,4 @@
     - nginx
 
 - include: logstash.yml
+  when: zabbix_web_use_logstash

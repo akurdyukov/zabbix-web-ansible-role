@@ -3,7 +3,7 @@
 zabbix_web_user: www-data
 zabbix_web_group: www-data
 
-zabbix_web_package: zabbix-frontend-php
+zabbix_database: mysql # or pgsql
 
 zabbix_web_conf_dir:   /etc/zabbix
 zabbix_web_log_dir:    /var/log/zabbix-web
@@ -18,6 +18,8 @@ zabbix_database_name:     zabbix
 
 zabbix_server_host: localhost
 zabbix_server_port: 10051
+
+zabbix_web_use_logstash: true
 logstash_conf_dir: /etc/logstash/conf.d
 
 php_fpm_conf_dir: /etc/php5/fpm

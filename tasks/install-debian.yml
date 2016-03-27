@@ -1,0 +1,24 @@
+---
+- name: Install package
+  apt: name=zabbix-frontend-php state=present
+  tags:
+    - zabbix-web
+
+- name: Install PHP MySQL client library
+  apt: name=php5-mysql state=present
+  when: ansible_os_family  == "Debian"
+  tags:
+    - zabbix-web
+    - mysql
+    - php
+    - php-fpm
+
+- name: Turn off Apache
+  service: name=apache2 state=stopped
+  when: ansible_os_family  == "Debian"
+  tags:
+    - zabbix-web
+    - apache
+
+- name: Set service name
+  set_fact: service_name="php5-fpm"

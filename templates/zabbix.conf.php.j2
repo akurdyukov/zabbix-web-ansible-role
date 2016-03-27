@@ -3,7 +3,7 @@
 global $DB;
 
 // Valid types are MYSQL, SQLITE3 or POSTGRESQL
-$DB["TYPE"]                     = 'MYSQL';
+$DB["TYPE"]                     = '{{ php_database_name }}';
 $DB["SERVER"]                   = '{{ zabbix_database_host }}';
 $DB["PORT"]                     = '{{ zabbix_database_port }}';
 
